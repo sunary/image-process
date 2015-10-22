@@ -1,5 +1,6 @@
-machine_learning
-morphology
 similarity
-pre_process
+utils
+morphology
 opencv
+machine_learning
+pre_process

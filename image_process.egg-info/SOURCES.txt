@@ -13,9 +13,12 @@ morphology/__init__.py
 morphology/morphology.py
 opencv/__init__.py
 opencv/face_detect.py
+opencv/iris_detect.py
 pre_process/__init__.py
 pre_process/edge_detect.py
 pre_process/line_detect.py
 pre_process/orientation_field.py
 similarity/__init__.py
 similarity/similarity_hsv.py
+utils/__init__.py
+utils/helper.py

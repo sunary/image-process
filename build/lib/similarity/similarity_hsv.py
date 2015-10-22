@@ -10,59 +10,45 @@ class SimilarityHSV():
 
     def __init__(self):
         self.current_dir = os.path.dirname(__file__)
-
-    def read_image(self):
-        self.img = Image.open(self.current_dir + '/../resources/flower.jpg')
-        data = self.img.getdata()
-
-        self.pix = [[0]*self.img.size[1] for _ in range(self.img.size[0])]
-        for i in range(self.img.size[0]):
-            for j in range(self.img.size[1]):
-                self.pix[i][j] = (data[j*self.img.size[0] + i][0], data[j*self.img.size[0] + i][1], data[j*self.img.size[0] + i][2])
+        self.range_hsv = (8, 12, 3)
 
     def create_histogram(self):
-        self.range_h = 8
-        self.range_s = 12
-        self.range_v = 3
-        self.histogram_hsv = []
-        for h in range(self.range_h):
-            for s in range(self.range_s):
-                for v in range(self.range_v):
-                    self.histogram_hsv.append([(h + 1.0)*360/ self.range_h, (s + 1.0)/ self.range_s, (h + 1.0)/ self.range_v])
+        histogram_hsv = []
+        for h in range(self.range_hsv[0]):
+            for s in range(self.range_hsv[1]):
+                for v in range(self.range_hsv[2]):
+                    histogram_hsv.append([(h + 1.0)*360/ self.range_hsv[0], (s + 1.0)/ self.range_hsv[1], (h + 1.0)/ self.range_hsv[2]])
 
     def region_computor(self):
-        segments = [(0, self.img.size[0]/2, 0, self.img.size[1]/2), (self.img.size[0]/2, self.img.size[0], 0, self.img.size[1]/2),
-                    (self.img.size[0]/2, self.img.size[0], self.img.size[1]/2, self.img.size[1]), (0, self.img.size[0]/2, self.img.size[1]/2, self.img.size[1])]
-        (axesX, axesY) = (int(self.img.size[0] * 0.75) / 2, int(self.img.size[1] * 0.75) / 2)
+        return None
 
-
-    def process(self):
+    def process(self, pix, histogram_hsv):
         self.create_histogram()
 
-        histogram = [1]* (self.range_h*self.range_s*self.range_v)
+        histogram_vector = [1]* (self.range_hsv[0] * self.range_hsv[1] * self.range_hsv[2])
 
-        for i in range(self.img.size[0]):
-            for j in range(self.img.size[1]):
-                self.pix[i][j] = self._RBG_to_HSV(self.pix[i][j])
+        for i in range(len(pix)):
+            for j in range(len(pix[0])):
+                pix[i][j] = self._RBG_to_HSV(pix[i][j])
                 h = 0
-                while h < self.range_h:
+                while h < self.range_hsv[0]:
                     s = 0
-                    while s < self.range_s:
+                    while s < self.range_hsv[1]:
                         v = 0
-                        while v < self.range_v:
-                            if self.pix[i][j][0] <= self.histogram_hsv[h*self.range_s*self.range_v + s*self.range_v + v][0] \
-                                and self.pix[i][j][1] <= self.histogram_hsv[h*self.range_s*self.range_v + s*self.range_v + v][1] \
-                                    and self.pix[i][j][2] <= self.histogram_hsv[h*self.range_s*self.range_v + s*self.range_v + v][2]:
-                                histogram[h*self.range_s*self.range_v + s*self.range_v + v] += 1
-                                h, s, v = (self.range_h, self.range_s, self.range_v)
+                        while v < self.range_hsv[2]:
+                            if pix[i][j][0] <= histogram_hsv[h*self.range_hsv[0]*self.range_hsv[2] + s*self.range_hsv[2] + v][0] \
+                                and pix[i][j][1] <= histogram_hsv[h*self.range_hsv[1]*self.range_hsv[2] + s*self.range_hsv[2] + v][1] \
+                                    and pix[i][j][2] <= histogram_hsv[h*self.range_hsv[1]*self.range_hsv[2] + s*self.range_hsv[2] + v][2]:
+                                histogram_vector[h*self.range_hsv[0]*self.range_hsv[1] + s*self.range_hsv[2] + v] += 1
+                                h, s, v = self.range_hsv[0]
                             v += 1
                         s += 1
                     h += 1
 
-        for i in range(self.range_h*self.range_s*self.range_v):
-            histogram[i] *= 1.0/(self.img.size[0]*self.img.size[1])
+        for i in range(self.range_hsv[0] * self.range_hsv[1] * self.range_hsv[2]):
+            histogram_vector[i] *= 1.0/(len(pix) * len(pix[0]))
 
-        print histogram
+        return histogram_vector
 
     def chi_squared_distance(self, histogram_x, histogram_y):
         distance = 0
@@ -128,7 +114,8 @@ class SimilarityHSV():
 
         return rgb
 
+
 if __name__ == '__main__':
     similarity_HSV = SimilarityHSV()
-    similarity_HSV.read_image()
+    similarity_HSV.create_histogram()
     similarity_HSV.process()
