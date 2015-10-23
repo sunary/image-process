@@ -1,6 +1,7 @@
 __author__ = 'sunary'
 
 
+from pre_process.noise_removal import NoiseRemoval
 from utils import helper
 import os
 
@@ -22,8 +23,8 @@ class EdgeDetect():
             for j in range(len(self.gx)/2, len(pix[0]) - len(self.gy)/2):
                 for d1 in range(len(self.gx)):
                     for d2 in range(len(self.gx)):
-                        temp_x[i][j] += self.gx[d1][d2] * pix[i + d1 - 1][j + d2 -1]
-                        temp_y[i][j] += self.gy[d1][d2] * pix[i + d1 - 1][j + d2 -1]
+                        temp_x[i][j] += self.gx[d1][d2] * pix[i + d1 - len(self.gx)/2][j + d2 - len(self.gx)/2]
+                        temp_y[i][j] += self.gy[d1][d2] * pix[i + d1 - len(self.gy)/2][j + d2 - len(self.gy)/2]
 
         for i in range(0, len(pix) - 0):
             for j in range(0, len(pix[0]) - 0):
@@ -39,24 +40,24 @@ class EdgeDetect():
                   [0, 0, 0],
                   [1, 2, 1]]
 
-        self.gx = [[1, 2, 0, -2, -1],
-                   [4, 8, 0, -8, -4],
-                   [6, 12, 0, -12, -6],
-                   [4, 8, 0, -8, -4],
-                   [1, 2, 0, -2, 1]]
-        self.gy = [[-1, -4, -6, -4, -1],
-                   [-2, -8, -12, -8, -2],
-                   [0, 0, 0, 0, 0],
-                   [2, 8, 12, 8, 2],
-                   [1, 4, 6, 4, 1]]
+        # self.gx = [[1, 2, 0, -2, -1],
+        #            [4, 8, 0, -8, -4],
+        #            [6, 12, 0, -12, -6],
+        #            [4, 8, 0, -8, -4],
+        #            [1, 2, 0, -2, 1]]
+        # self.gy = [[-1, -4, -6, -4, -1],
+        #            [-2, -8, -12, -8, -2],
+        #            [0, 0, 0, 0, 0],
+        #            [2, 8, 12, 8, 2],
+        #            [1, 4, 6, 4, 1]]
 
         self.threshold = 4000
 
     def _robert(self):
         self.gx = [[1, 0],
-                [0, -1]]
+                    [0, -1]]
         self.gy = [[0, 1],
-                [-1, 0]]
+                    [-1, 0]]
 
         self.threshold = 400
 
@@ -76,4 +77,6 @@ if __name__ == '__main__':
     pix = helper.read_image(os.path.dirname(__file__) + '/../resources/face02.jpg')
     pix = helper.convert_gray(pix)
     pix = edge_detect.process(pix)
-    helper.save_image(os.path.dirname(__file__) + '/../resources/result.png')
+    noise_removal = NoiseRemoval()
+    pix = noise_removal.process(pix)
+    helper.save_image(pix, os.path.dirname(__file__) + '/../resources/result.png')

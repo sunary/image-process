@@ -1,6 +1,0 @@
-similarity
-utils
-morphology
-opencv
-machine_learning
-pre_process

@@ -4,6 +4,7 @@ __author__ = 'sunary'
 import cv2
 import numpy as np
 from pre_process.edge_detect import EdgeDetect
+from pre_process.noise_removal import NoiseRemoval
 from utils import helper
 import os
 
@@ -13,6 +14,7 @@ class IrisDetect():
     def __init__(self):
         self.current_dir = os.path.dirname(__file__)
         self.edge_detect = EdgeDetect()
+        self.noise_removal = NoiseRemoval()
 
     def process(self, cascade, nested_cascade, img_file):
         cascade = cv2.CascadeClassifier(self.current_dir + cascade)
@@ -25,17 +27,26 @@ class IrisDetect():
         face_rects = self.detect(gray, cascade)
         vis = gray.copy()
         self.draw_rects(vis, face_rects, (0, 255, 0))
+
+        eye_count = 0
         if not nested.empty():
             for x1, y1, x2, y2 in face_rects:
                 face_roi = gray[y1:y2, x1:x2]
                 face_vis = vis[y1:y2, x1:x2]
+
                 eyes_rects = self.detect(face_roi.copy(), nested)
                 self.draw_rects(face_vis, eyes_rects, (255, 0, 0))
 
                 for x1, y1, x2, y2 in eyes_rects:
                     eyes_roi = face_roi[y1:y2, x1:x2]
+
                     edge_eyes_roi = self.edge_detect.process(eyes_roi.T)
-                    helper.save_image(edge_eyes_roi, '/../resources/eyes_roi.png')
+                    helper.save_image(edge_eyes_roi, self.current_dir + '/../resources/eyes_roi%s.png' %(eye_count))
+
+                    edge_eyes_roi = self.noise_removal.process(edge_eyes_roi)
+                    helper.save_image(edge_eyes_roi, self.current_dir + '/../resources/eyes_roi_noise_removal%s.png' %(eye_count))
+                    eye_count += 1
+
                     edge_eyes_roi = np.array(edge_eyes_roi, dtype=np.uint8)
                     eyes_vis = face_vis[y1:y2, x1:x2]
 

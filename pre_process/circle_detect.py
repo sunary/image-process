@@ -1,7 +1,7 @@
 __author__ = 'sunary'
 
 
-class LineDetect():
+class CircleDetect():
 
     def __init__(self):
         pass
@@ -11,4 +11,4 @@ class LineDetect():
 
 
 if __name__ == '__main__':
-    line_detect = LineDetect()
+    circle_detect = CircleDetect()
