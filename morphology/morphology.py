@@ -211,8 +211,23 @@ if __name__ == '__main__':
           [0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0],
           [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
           [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]]
+    print '\ndilation'
     pprint(morphology.dilation(pix))
+
+    print '\nerosion'
     pprint(morphology.erosion(pix))
+
+    print '\nopening'
+    pprint(morphology.opening(pix))
+
+    print '\nclosing'
+    pprint(morphology.closing(pix))
+
+    print '\nthickening'
     pprint(morphology.thickening(pix))
+
+    print '\nthinning'
     pprint(morphology.thinning(pix))
+
+    print '\nhit_and_mix'
     pprint(morphology.hit_and_mix(pix))

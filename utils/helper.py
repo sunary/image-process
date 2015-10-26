@@ -4,6 +4,34 @@ __author__ = 'sunary'
 from PIL import Image
 
 
+def gray_to_bin(pix):
+    '''
+    Examples:
+        >>> gray_to_bin([[0xffffff, 0xffffff], [0, 0]])
+        [[0, 0], [1, 1]]
+    '''
+    bin_pix = []
+
+    for p in pix:
+        bin_p = map(lambda x: 0 if x else 1, p)
+        bin_pix.append(bin_p)
+
+    return bin_pix
+
+def binary_to_gray(pix):
+    '''
+    Examples:
+        >>> binary_to_gray([[0, 0], [1, 1]])
+        [[16777215, 16777215], [0, 0]]
+    '''
+    pix_gray = []
+
+    for p in pix:
+        gray_p = map(lambda x: 0x000000 if x else 0xffffff, p)
+        pix_gray.append(gray_p)
+
+    return pix_gray
+
 def convert_gray(pix):
     pix_gray = [[0] * len(pix[0]) for _ in range(len(pix))]
 
@@ -35,3 +63,8 @@ def save_image(pix, img_file):
             img.putpixel((i, j), ((pix[i][j] & 0x00ff0000) >> 16, (pix[i][j] & 0x0000ff00) >> 8, (pix[i][j] & 0x000000ff)))
 
     img.save(img_file)
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()

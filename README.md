@@ -2,6 +2,6 @@
 
 * Morphology
 * Machine Learning
-* Preprocess: edge detect, line detect, orientation field
-* Ranking
+* Preprocess
+* OpenCV
 * Similarity

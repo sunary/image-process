@@ -1,12 +1,13 @@
 __author__ = 'sunary'
 
 
+from utils import helper
+import os
 import cv2
 import numpy as np
 from pre_process.edge_detect import EdgeDetect
 from pre_process.noise_removal import NoiseRemoval
-from utils import helper
-import os
+from morphology.morphology import Morphology
 
 
 class IrisDetect():
@@ -15,6 +16,7 @@ class IrisDetect():
         self.current_dir = os.path.dirname(__file__)
         self.edge_detect = EdgeDetect()
         self.noise_removal = NoiseRemoval()
+        self.morphology = Morphology()
 
     def process(self, cascade, nested_cascade, img_file):
         cascade = cv2.CascadeClassifier(self.current_dir + cascade)
@@ -40,10 +42,11 @@ class IrisDetect():
                 for x1, y1, x2, y2 in eyes_rects:
                     eyes_roi = face_roi[y1:y2, x1:x2]
 
-                    edge_eyes_roi = self.edge_detect.process(eyes_roi.T)
+                    edge_eyes_roi = self.edge_detect.process(eyes_roi)
                     helper.save_image(edge_eyes_roi, self.current_dir + '/../resources/eyes_roi%s.png' %(eye_count))
 
-                    edge_eyes_roi = self.noise_removal.process(edge_eyes_roi)
+                    # edge_eyes_roi = self.noise_removal.median(edge_eyes_roi)
+                    edge_eyes_roi = self.noise_removal.opening(edge_eyes_roi)
                     helper.save_image(edge_eyes_roi, self.current_dir + '/../resources/eyes_roi_noise_removal%s.png' %(eye_count))
                     eye_count += 1
 
