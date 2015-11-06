@@ -25,13 +25,13 @@ class EdgeDetect():
                     for d2 in range(len(self.gx)):
                         temp_x[i][j] += self.gx[d1][d2] * pix[i + d1 - len(self.gx)/2][j + d2 - len(self.gx)/2]
                         temp_y[i][j] += self.gy[d1][d2] * pix[i + d1 - len(self.gy)/2][j + d2 - len(self.gy)/2]
-                sum_gray += temp_x[i][j]*temp_x[i][j] + temp_y[i][j]*temp_y[i][i]
+                sum_gray += temp_x[i][j]*temp_x[i][j] + temp_y[i][j]*temp_y[i][j]
 
         threshold = 3*sum_gray/((len(pix))*len(pix[0]))
 
         for i in range(0, len(pix) - 0):
             for j in range(0, len(pix[0]) - 0):
-                edge_pix[i][j] = 0x000000 if (temp_x[i][j]*temp_x[i][j] + temp_y[i][j]*temp_y[i][i] > threshold) else 0xffffff
+                edge_pix[i][j] = 0x000000 if (temp_x[i][j]*temp_x[i][j] + temp_y[i][j]*temp_y[i][j] > threshold) else 0xffffff
 
         return edge_pix
 
@@ -56,9 +56,9 @@ class EdgeDetect():
 
     def _robert(self):
         self.gx = [[1, 0],
-                    [0, -1]]
+                  [0, -1]]
         self.gy = [[0, 1],
-                    [-1, 0]]
+                  [-1, 0]]
 
     def _prewitt(self):
         self.gx = [[-1, 0, 1],
@@ -71,9 +71,10 @@ class EdgeDetect():
 
 if __name__ == '__main__':
     edge_detect = EdgeDetect()
-    pix = helper.read_image(os.path.dirname(__file__) + '/../resources/face02.jpg')
+    pix = helper.read_image(os.path.dirname(__file__) + '/../resources/fp01.jpg')
     pix = helper.convert_gray(pix)
+    helper.save_image(pix, os.path.dirname(__file__) + '/../resources/gray.png', True)
     pix = edge_detect.process(pix)
-    noise_removal = NoiseRemoval()
-    pix = noise_removal.process(pix)
-    helper.save_image(pix, os.path.dirname(__file__) + '/../resources/result.png')
+    # noise_removal = NoiseRemoval()
+    # pix = noise_removal.opening(pix)
+    helper.save_image(pix, os.path.dirname(__file__) + '/../resources/edge.png')

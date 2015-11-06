@@ -52,15 +52,20 @@ def read_image(img_file):
 
     return pix
 
-def save_image(pix, img_file):
+def save_image(pix, img_file, gray_image=False):
     with open(img_file, 'wb+'):
         pass
 
     img = Image.new(mode='RGB', size=(len(pix), len(pix[0])))
 
-    for i in range(img.size[0]):
-        for j in range(img.size[1]):
-            img.putpixel((i, j), ((pix[i][j] & 0x00ff0000) >> 16, (pix[i][j] & 0x0000ff00) >> 8, (pix[i][j] & 0x000000ff)))
+    if gray_image:
+        for i in range(img.size[0]):
+            for j in range(img.size[1]):
+                img.putpixel((i, j), (pix[i][j], pix[i][j], pix[i][j]))
+    else:
+        for i in range(img.size[0]):
+            for j in range(img.size[1]):
+                img.putpixel((i, j), ((pix[i][j] & 0x00ff0000) >> 16, (pix[i][j] & 0x0000ff00) >> 8, (pix[i][j] & 0x000000ff)))
 
     img.save(img_file)
 
