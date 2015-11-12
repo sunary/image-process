@@ -12,10 +12,10 @@ class OrientationField():
 
     def fingerprint_enhance(self, pix):
         print("fingerprint enhance calculator")
-        block_size = (15, 15)
+        block_size = (9, 9)
 
-        vx = [[0] * len(pix[0]) for _ in range(len(pix))]
-        vy = [[0] * len(pix[0]) for _ in range(len(pix))]
+        dx = [[0] * len(pix[0]) for _ in range(len(pix))]
+        dy = [[0] * len(pix[0]) for _ in range(len(pix))]
 
         self._sobel()
 
@@ -24,8 +24,11 @@ class OrientationField():
 
                 for d1 in range(len(self.gx)):
                     for d2 in range(len(self.gx)):
-                        vx[i][j] += self.gx[d1][d2] * pix[i + d1 - len(self.gx)/2][j + d2 - len(self.gx)/2]
-                        vy[i][j] += self.gy[d1][d2] * pix[i + d1 - len(self.gx)/2][j + d2 - len(self.gy)/2]
+                        dx[i][j] += self.gx[d1][d2] * pix[i + d1 - len(self.gx)/2][j + d2 - len(self.gx)/2]
+                        dy[i][j] += self.gy[d1][d2] * pix[i + d1 - len(self.gx)/2][j + d2 - len(self.gy)/2]
+
+        vx = [[2 * dx[i][j] * dy[i][j] for j in range(len(pix[0]))] for i in range(len(pix))]
+        vy = [[dx[i][j]**2 - dy[i][j]**2 for j in range(len(pix[0]))] for i in range(len(pix))]
 
         vx_integral_img = self.cal_integral_img(vx)
         vy_integral_img = self.cal_integral_img(vy)
@@ -40,7 +43,7 @@ class OrientationField():
                 _vy = vy_integral_img[max_i][max_j] + vy_integral_img[min_i][min_j] -\
                       (vy_integral_img[max_i][min_j] + vy_integral_img[min_i][max_j])
 
-                orientation[i][j] = math.atan2(_vy, _vx)
+                orientation[i][j] = math.atan2(_vy, _vx)/2
 
         integral_orientation = self.cal_integral_img(orientation)
         mean_orientation = [[0] * len(pix[0]) for _ in range(len(pix))]
@@ -60,7 +63,7 @@ class OrientationField():
                     for n in range(-block_size[1]/2, block_size[1]/2 + 1):
                         variance_orientation[i][j] += (mean_orientation[i][j] - orientation[i + m][j + n])**2
 
-                variance_orientation[i][j] = math.sqrt(variance_orientation[i][j])
+                variance_orientation[i][j] = math.sqrt(variance_orientation[i][j] / (block_size[0] * block_size[1]))
 
         confident = [[0] * len(pix[0]) for _ in range(len(pix))]
         gen_pix = [[0xffffff] * len(pix[0]) for _ in range(len(pix))]
@@ -75,25 +78,15 @@ class OrientationField():
                 dy = vy_integral_img[max_i][max_j] + vy_integral_img[min_i][min_j] -\
                       (vy_integral_img[max_i][min_j] + vy_integral_img[min_i][max_j])
 
-                if dx == 0:
-                    a = 9999* dy
-                else:
-                    a = dy / dx
-                b = j - a * i
-
                 memx = memy = 0
-                if dx > dy:
-                    memx += 1
-                else:
-                    memy += 1
 
                 for _ in range(block_size[0]/2):
-                    confident[i][j] += self.gaussian_dist(variance_orientation[i + memx][j + memy])
-                    confident[i][j] += self.gaussian_dist(variance_orientation[i - memx][j - memy])
-                    confident[i][j] -= self.gaussian_dist(variance_orientation[i + memx][j - memy])
-                    confident[i][j] -= self.gaussian_dist(variance_orientation[i - memx][j + memy])
+                    confident[i][j] += self.gaussian_dist_angle(orientation[i + memx][j + memy], mean_orientation[i][j], variance_orientation[i][j])
+                    confident[i][j] += self.gaussian_dist_angle(orientation[i - memx][j - memy], mean_orientation[i][j], variance_orientation[i][j])
+                    confident[i][j] -= self.gaussian_dist_angle(orientation[i + memx][j - memy], mean_orientation[i][j], variance_orientation[i][j])
+                    confident[i][j] -= self.gaussian_dist_angle(orientation[i - memx][j + memy], mean_orientation[i][j], variance_orientation[i][j])
 
-                    if (j + memy) - a*(i + memx) + b < 0:
+                    if dx*memy < dy*memx:
                         memy += 1
                     else:
                         memx += 1
@@ -125,9 +118,9 @@ class OrientationField():
         return integral_img
 
     def ij_value(self, pix_size, block_size, i, j):
-        min_i = max(i - block_size[0]/2, 0)
+        min_i = max(i - block_size[0]/2-1, 0)
         max_i = min(i + block_size[0]/2, pix_size[0] - 1)
-        min_j = max(j - block_size[1]/2, 0)
+        min_j = max(j - block_size[1]/2-1, 0)
         max_j = min(j + block_size[1]/2, pix_size[1] - 1)
 
         return min_i, max_i, min_j, max_j
@@ -238,8 +231,24 @@ class OrientationField():
                   [0, 0, 0],
                   [1, 2, 1]]
 
-    def gaussian_dist(self, x):
-        return math.exp(-1.0 / x**2)/math.sqrt(2 * math.pi * x) if x else 0
+        self.gx = [[1, 2, 0, -2, -1],
+                   [4, 8, 0, -8, -4],
+                   [6, 12, 0, -12, -6],
+                   [4, 8, 0, -8, -4],
+                   [1, 2, 0, -2, 1]]
+        self.gy = [[-1, -4, -6, -4, -1],
+                   [-2, -8, -12, -8, -2],
+                   [0, 0, 0, 0, 0],
+                   [2, 8, 12, 8, 2],
+                   [1, 4, 6, 4, 1]]
+
+    def gaussian_dist(self, x, mx=0, vx=1):
+        return math.exp(-.5 * ((x - mx) / vx) **2)
+    def gaussian_dist_angle(self, x, mx=0, vx=1):
+        x = x-mx
+        if x<math.pi: x+=math.pi*2
+        if x>math.pi: x-=math.pi*2
+        return math.exp(-.5 * ((x - mx) / vx) **2)
 
 
 if __name__ == '__main__':
