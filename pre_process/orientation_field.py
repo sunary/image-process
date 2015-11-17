@@ -107,13 +107,16 @@ class OrientationField():
         '''
 
         integral_img = [[0] * len(pix[0]) for _ in range(len(pix))]
-        for i in range(len(pix)):
-            for j in range(len(pix[0])):
-                c = integral_img[i - 1][j - 1] if (i > 0 and j > 0) else 0
-                ac = integral_img[i][j - 1] if (j > 0) else 0
-                bc = integral_img[i - 1][j] if (i > 0) else 0
 
-                integral_img[i][j] = ac + bc - c + pix[i][j]
+        integral_img[0][0] = pix[0][0]
+        for j in range(1,len(pix[0])):
+            integral_img[0][j]=integral_img[0][j-1]+pix[0][j]
+
+        for i in range(1, len(pix)):
+            line_sum = 0
+            for j in range(len(pix[0])):
+                line_sum += pix[i][j]
+                integral_img[i][j] = integral_img[i-1][j] + line_sum
 
         return integral_img
 
@@ -235,7 +238,7 @@ class OrientationField():
                    [4, 8, 0, -8, -4],
                    [6, 12, 0, -12, -6],
                    [4, 8, 0, -8, -4],
-                   [1, 2, 0, -2, 1]]
+                   [1, 2, 0, -2, -1]]
         self.gy = [[-1, -4, -6, -4, -1],
                    [-2, -8, -12, -8, -2],
                    [0, 0, 0, 0, 0],
@@ -244,10 +247,13 @@ class OrientationField():
 
     def gaussian_dist(self, x, mx=0, vx=1):
         return math.exp(-.5 * ((x - mx) / vx) **2)
+
     def gaussian_dist_angle(self, x, mx=0, vx=1):
-        x = x-mx
-        if x<math.pi: x+=math.pi*2
-        if x>math.pi: x-=math.pi*2
+        x = x - mx
+        if x < math.pi:
+            x += 2 * math.pi
+        if x > math.pi:
+            x -= 2 * math.pi
         return math.exp(-.5 * ((x - mx) / vx) **2)
 
 
