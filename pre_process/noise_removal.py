@@ -34,7 +34,7 @@ class NoiseRemoval():
                      [1, 1, 2, 1, 1]]
 
         self.mask = mask or self.mask
-        self.sum = sum([sum(i) for i in self.mask])
+        self.sum_mask = sum([sum(i) for i in self.mask])
 
     def median(self, pix, median=True):
         '''
@@ -48,7 +48,7 @@ class NoiseRemoval():
                     for mj in range(len(self.mask)):
                         pix_removal[i][j] += self.mask[mi][mj] * pix[i + mi - len(self.mask)/2][j + mj - len(self.mask)/2]
 
-                pix_removal[i][j] /= self.sum
+                pix_removal[i][j] /= self.sum_mask
                 if median:
                     median_value = pix[i][j]
                     min_abs = 256

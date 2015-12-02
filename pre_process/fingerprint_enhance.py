@@ -109,14 +109,14 @@ class FingerprintEnhance():
         integral_img = [[0] * len(pix[0]) for _ in range(len(pix))]
 
         integral_img[0][0] = pix[0][0]
-        for j in range(1,len(pix[0])):
-            integral_img[0][j]=integral_img[0][j-1]+pix[0][j]
+        for j in range(1, len(pix[0])):
+            integral_img[0][j] = integral_img[0][j - 1] + pix[0][j]
 
         for i in range(1, len(pix)):
             line_sum = 0
             for j in range(len(pix[0])):
                 line_sum += pix[i][j]
-                integral_img[i][j] = integral_img[i-1][j] + line_sum
+                integral_img[i][j] = integral_img[i - 1][j] + line_sum
 
         return integral_img
 

@@ -8,6 +8,7 @@ import numpy as np
 from pre_process.edge_detect import EdgeDetect
 from pre_process import threshold
 from pre_process.fingerprint_enhance import FingerprintEnhance
+from pre_process.gabor_filter import GaborFilter
 
 
 class FingerprintDetect():
@@ -63,6 +64,10 @@ class FingerprintDetect():
         # fe = FingerprintEnhance()
         # pix_enhance = fe.gabor_filter(pix_threshold)
         # cv2.imshow("pix-enhance", np.array(pix_enhance))
+
+        gabor = GaborFilter()
+        pix_gabor = gabor.process(pix_threshold)
+        cv2.imshow("pix-gabor", np.array(pix_gabor))
 
         cv2.waitKey()
 
