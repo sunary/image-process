@@ -38,7 +38,6 @@ class FaceDetect():
                 #         cv2.circle(eyes_vis, (i[0], i[1]), i[2], (0, 255, 0), 2)
 
         cv2.imshow('face detect', vis)
-        self.close()
 
     def detect(self, img, cascade):
         rects = cascade.detectMultiScale(img, scaleFactor=1.3, minNeighbors=4, minSize=(30, 30), flags = cv2.CASCADE_SCALE_IMAGE)
@@ -51,12 +50,11 @@ class FaceDetect():
         for x1, y1, x2, y2 in rects:
             cv2.rectangle(img, (x1, y1), (x2, y2), color, 2)
 
-    def close(self):
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-
 
 if __name__ == '__main__':
     face_detect = FaceDetect()
-    face_detect.process('/../resources/haarcascade_frontalface_alt.xml', '/../resources/haarcascade_eye.xml',
+    face_detect.process('/../resources/haarcascade_frontalface_alt.xml',
+                        '/../resources/haarcascade_eye.xml',
                         img_file='/../resources/face02.jpg')
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()

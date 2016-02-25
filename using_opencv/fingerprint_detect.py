@@ -6,7 +6,7 @@ import os
 import cv2
 import numpy as np
 from pre_process.edge_detect import EdgeDetect
-from pre_process import threshold
+from pre_process import histogram_equalization
 from pre_process.fingerprint_enhance import FingerprintEnhance
 from pre_process.gabor_filter import GaborFilter
 
@@ -58,7 +58,7 @@ class FingerprintDetect():
         pix_bin = cv2.adaptiveThreshold(pix_clahe, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV,
                                         blockSize=r_size*2 + 1, C=r_size)
         cv2.imshow('pix-bin', pix_bin)
-        pix_threshold = threshold.ostu_algorithm(pix_bin, r_size - 2)
+        pix_threshold = histogram_equalization.ostu_algorithm(pix_bin, r_size - 2)
         cv2.imshow('pix-ostu', pix_threshold)
 
         # fe = FingerprintEnhance()

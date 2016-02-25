@@ -5,7 +5,20 @@ import cv2
 import numpy as np
 
 
-def ostu_algorithm(img, blursize):
+def normal(img):
+    return cv2.equalizeHist(img)
+
+
+def clahe(img):
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(4, 4))
+    return clahe.apply(img)
+
+
+def adaptive(img):
+    return cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 4)
+
+
+def ostu_algorithm(img, blursize=3):
     blur = cv2.GaussianBlur(img, (blursize, blursize), 0)
     hist = cv2.calcHist([blur], [0], None, [256], [0, 256])
     hist_norm = hist.ravel()/hist.max()
