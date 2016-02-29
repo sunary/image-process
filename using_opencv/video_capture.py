@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 
 
-def run():
+def color_detect():
     cap = cv2.VideoCapture(0)
 
     while(1):
@@ -17,7 +17,7 @@ def run():
         upper_blue = np.array([255, 255, 255], dtype=np.uint8)
 
         mask = cv2.inRange(frame, lower_blue, upper_blue)
-        res = cv2.bitwise_and(frame,frame, mask=mask)
+        # res = cv2.bitwise_and(frame,frame, mask=mask)
 
         # cv2.imshow('frame', frame)
         cv2.imshow('mask', mask)
@@ -30,4 +30,4 @@ def run():
 
 
 if __name__ == '__main__':
-    run()
+    color_detect()
