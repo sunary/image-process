@@ -3,60 +3,63 @@ __author__ = 'sunary'
 
 import cv2
 import numpy as np
-from sklearn.externals import joblib
-from skimage.feature import hog
+
+
+def add_edge(img, black=True):
+    height, width = img.shape[:2]
+    img_gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+
+    if not black:
+        img_gray = inverte(img_gray.copy())
+
+    img_edge = auto_canny(img)
+    for i in np.arange(height):
+        for j in np.arange(width):
+            if black:
+                if img_edge[i][j] == 255:
+                    img_gray[i][j] = 0
+            else:
+                if img_edge[i][j] == 255:
+                    img_gray[i][j] = 255
+
+    return img_gray
+
+
+def auto_canny(img, sigma=0.33):
+    v = np.median(img)
+
+    lower = int(max(0, (1.0 - sigma) * v))
+    upper = int(min(255, (1.0 + sigma) * v))
+    edged = cv2.Canny(img, lower, upper)
+
+    return edged
 
 
 def color_detect(img):
     lower = np.array((175, 175, 175), dtype=np.uint8)
     upper = np.array((255, 255, 255), dtype=np.uint8)
 
-    mask = cv2.inRange(img, np.mean(lower), np.mean(upper))
-    # output = cv2.bitwise_and(img, img, mask=mask)
+    if len(img.shape) == 3:
+        mask = cv2.inRange(img, lower, upper)
+    else:
+        mask = cv2.inRange(img, np.mean(lower), np.mean(upper))
 
+    # output = cv2.bitwise_and(img, img, mask=mask)
     # cv2.imshow("color detection", np.hstack([img, mask]))
     return mask
 
 
-
-def get_plate(img):
+def get_plate_flood(img_color, img):
     height, width = img.shape[:2]
-    ratio = [1.3, 1.5]
-    range_rect_width = (180, 300)
-    corner = np.array([[255, 255, 255], [255, 255, 255], [255, 255, 255]])
-
-    check_point = []
-    for i in range(height/4, height/2):
-        for j in range(width/4, width/2):
-            check_point.append((i, j))
-
-    for x, y in check_point:
-        if np.array_equal(img[y - 1:y + 2, x - 1: x + 2], corner):
-            arr_height = np.arange(int(range_rect_width[0]/ratio[0]), min(int(range_rect_width[1]/ratio[1]), height - y - 1))[::-1]
-            arr_width = np.arange(range_rect_width[0], min(range_rect_width[1], width - x - 1))[::-1]
-
-            for height_rect in arr_height:
-                for width_rect in arr_width:
-                    if np.array_equal(img[y - 1:y + 2, x + width_rect - 1: x + width_rect + 2], corner) and \
-                            np.array_equal(img[y + height_rect - 1:y + height_rect + 2, x - 1: x + 2], corner) and \
-                            np.array_equal(img[y+ height_rect - 1:y + height_rect + 2, x + width_rect- 1: x + width_rect + 2], corner) and \
-                            width_rect*1.0/height_rect > ratio[0] and width_rect*1.0/height_rect < ratio[1]:
-                        print (y, x, y + height_rect, x + width_rect)
-                        cv2.rectangle(img, (x, y), (x + width_rect, y + height_rect), (255), 2)
-
-                        return img[y:y + height_rect, x:x + width_rect]
-
-    print 'no'
-
-
-def get_plate_flood(img):
-    height, width = img.shape[:2]
-    ratio = [1.27, 1.5]
-    range_rect_width = (150, 350)
+    ratio = [0.9, 1.6]
+    range_rect_width = (30, 120)
     check_point = []
 
-    for i in range(height/4, height/2):
-        for j in range(width/4, width/2):
+    img_copy = img.copy()
+    rects = []
+
+    for i in range(0, height - 1):
+        for j in range(0, width - 1):
             if img[i][j] == 255:
                 check_point.append((i, j))
 
@@ -76,7 +79,7 @@ def get_plate_flood(img):
                 for idx in index:
                     new_i = i + idx[0]
                     new_j = j + idx[1]
-                    if new_i > height/4 and new_i < height*3/4 and new_j > width/4 and new_j < width*3/4 and \
+                    if new_i > 0 and new_i < height - 1 and new_j > 0 and new_j < width - 1 and \
                             img[new_i][new_j] == 255 and (new_i, new_j) not in set_relate_point:
                         if new_i > max_y:
                             max_y = new_i
@@ -97,15 +100,50 @@ def get_plate_flood(img):
             width_rect = max_x - min_x
             height_rect = max_y - min_y
             if width_rect > range_rect_width[0] and width_rect < range_rect_width[1] and \
-                    width_rect*1.0/height_rect > ratio[0] and width_rect*1.0/height_rect < ratio[1]:
-                return img[min_y:max_y, min_x:max_x]
-            else:
-                for i, j in relate_point:
-                    img[i][j] = 0
+                    width_rect*1.0/height_rect > ratio[0] and width_rect*1.0/height_rect < ratio[1] and\
+                    is_plate(img_color[min_y:max_y + 1, min_x:max_x + 1]):
+                # cv2.rectangle(img_copy, (min_x, min_y), (max_x, max_y), (255), 2)
+                rects.append((min_y, min_x, max_y + 1, max_x + 1))
+
+            for i, j in relate_point:
+                img[i][j] = 0
+
+    return rects
+
+
+def is_plate(img_plate):
+    height, width = img_plate.shape[:2]
+
+    boundaries = [((175, 175, 175), (255, 255, 255)), ((0, 0, 0), (80, 80, 80))]
+    percent_color = []
+    haft_percent_color = []
+
+    for lower, upper in boundaries:
+        lower = np.array(lower, dtype=np.uint8)
+        upper = np.array(upper, dtype=np.uint8)
+
+        img_plate_color = np.full((height, width), 0, dtype=np.uint8)
+
+        for i in np.arange(height):
+            for j in np.arange(width):
+                # img_plate_color[i][j] = np.all(img_plate[i][j] > lower) and np.all(img_plate[i][j] < upper)
+                img_plate_color[i][j] = np.mean(img_plate[i][j]) > np.mean(lower) and np.mean(img_plate[i][j]) < np.mean(upper)
+
+        percent_color.append(np.sum(img_plate_color)*1.0/(height * width))
+        haft_percent_color.append(np.sum(img_plate_color[height/4:height*3/4, width/4:width*3/4])*1.0/(height * width/4))
+
+    print haft_percent_color
+    return percent_color[1] > 0.04 and percent_color[0] > percent_color[1] + 0.15 and\
+            percent_color[0] + percent_color[1] > 0.5
 
 
 def remove_border(img):
     height, width = img.shape[:2]
+
+    # img = np.vstack((np.full((1, width), 0, dtype=np.uint8), img, np.full((1, width), 0, dtype=np.uint8)))
+    # height += 2
+    # img = np.column_stack((np.full((height, 1), 0, dtype=np.uint8), img, np.full((height, 1), 0, dtype=np.uint8)))
+    # width += 2
 
     changed_point = []
     for j in range(width):
@@ -131,7 +169,7 @@ def remove_border(img):
     while counter < len_changed_point:
         y, x = changed_point[counter]
         for idx in index:
-            if y + idx[0] >= 0 and y + idx[0] < height - 1 and x + idx[1] >= 0 and x + idx[1] < width - 1 and \
+            if y + idx[0] >= 0 and y + idx[0] < height and x + idx[1] >= 0 and x + idx[1] < width and \
                     img[y + idx[0]][x + idx[1]] == 0 and (y + idx[0], x + idx[1]) not in set_changed_point:
                 changed_point.append((y + idx[0], x + idx[1]))
                 set_changed_point.add((y + idx[0], x + idx[1]))
@@ -142,21 +180,21 @@ def remove_border(img):
 
     return img
 
+
 def inverte(img):
     return 255 - img
 
 
 def digit_recongize(img):
     height, width = img.shape[:2]
-    ratio = [0.22, 0.5]
-    range_rect_height = (height*0.39, height*0.46)
+    ratio = [0.15, 0.5]
+    range_rect_height = (height*0.3, height*0.5)
 
-    clf, pp = joblib.load('digits_cls.pkl')
     rects = []
 
     img_copy = img.copy()
     index = [(0, 1), (0, -1), (1, 0), (-1, 0)]
-    for i in range(height/2, height):
+    for i in range(0, height):
         for j in range(width):
             if img_copy[i][j] == 0:
                 min_y = max_y = i
@@ -190,42 +228,26 @@ def digit_recongize(img):
                 height_rect = max_y - min_y
                 if height_rect > range_rect_height[0] and height_rect < range_rect_height[1] and \
                         width_rect*1.0/height_rect > ratio[0] and width_rect*1.0/height_rect < ratio[1]:
-                    rects.append((min_y, min_x, height_rect, width_rect))
+                    rects.append((min_y, min_x, max_y + 1, max_x + 1))
 
     for rect in rects:
-        cv2.imshow('digits %s' % (str(rect)), img[rect[0]:rect[0] + rect[2], rect[1]:rect[1] + rect[3]])
+        cv2.imshow('digits %s' % (str(rect)), img[rect[0]:rect[2], rect[1]:rect[3]])
 
-    return
-    for rect in rects:
-        cv2.rectangle(img, (rect[0], rect[1]), (rect[0] + rect[2], rect[1] + rect[3]), (0), 2)
-
-        len_rect = int(rect[3] * 1.6)
-        pt1 = int(rect[1] + rect[3]/2 - len_rect/2)
-        pt2 = int(rect[0] + rect[2]/2 - len_rect/2)
-        roi = img[pt1:pt1+len_rect, pt2:pt2+len_rect]
-
-        roi = cv2.resize(roi, (28, 28), interpolation=cv2.INTER_AREA)
-        roi = cv2.dilate(roi, (3, 3))
-
-        roi_hog_fd = hog(roi, orientations=9, pixels_per_cell=(14, 14), cells_per_block=(1, 1), visualise=False)
-        print roi_hog_fd
-        roi_hog_fd = pp.transform(np.array([roi_hog_fd], 'float64'))
-        nbr = clf.predict(roi_hog_fd)
-        print nbr[0]
-        cv2.putText(img, str(nbr[0]), (rect[0], rect[1]), cv2.FONT_HERSHEY_DUPLEX, 2, (0), 3)
-
-    return img
+    # return img
 
 
 if __name__ == '__main__':
-    img = cv2.imread('/Users/sunary/Downloads/bs/bs_6789.jpg', cv2.THRESH_BINARY)
-    img = color_detect(img)
-    # cv2.imshow("color detection", img)
-    img = get_plate_flood(img)
-    if img is not None:
-        img = remove_border(img)
-        digit_recongize(img)
-        # cv2.imshow("rect detection", img)
+    img_color = cv2.imread('/Users/sunary/Downloads/bs/xe2.jpg')
+    img_gray = add_edge(img_color)
+
+    img = color_detect(img_gray)
+    cv2.imshow("rect detection", img)
+    rects = get_plate_flood(img_color, img.copy())
+
+    for r in rects:
+        _img = remove_border(img[r[0]:r[2], r[1]:r[3]])
+        digit_recongize(_img)
+        # cv2.imshow("rect detection %s" %(str(r)), _img)
 
     cv2.waitKey(0)
     cv2.destroyAllWindows()

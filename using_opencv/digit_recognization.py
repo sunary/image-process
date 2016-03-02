@@ -101,13 +101,10 @@ def dectect_black_rect(img):
                     while j < len(arr_width):
                         width_rect = arr_width[j]
                         if (array_equal(img[y - 1:y + 2, x + width_rect - 1: x + width_rect + 2], corner3)) and \
-                             (cumsum[y + height_rect][x + width_rect] + cumsum[y][x] - cumsum[y][x + width_rect] - cumsum[y + height_rect][x] < get_percent*height_rect*width_rect):
+                                (cumsum[y + height_rect][x + width_rect] + cumsum[y][x] - cumsum[y][x + width_rect] - cumsum[y + height_rect][x] < get_percent*height_rect*width_rect):
                             print (y, x, y + height_rect, x + width_rect)
 
-                            cv2.line(img, (y, x), (y, x + width_rect), (255), 2)
-                            cv2.line(img, (y, x + width_rect), (y + height_rect, x + width_rect), (255), 2)
-                            cv2.line(img, (y, x), (y + height_rect, x), (255), 2)
-                            cv2.line(img, (y, x + width_rect), (y + height_rect, x + width_rect, ), (255), 2)
+                            cv2.rectangle(img, (x, y), (x + width_rect, y + height_rect), (255), 2)
 
                             i = len(arr_height)
                             j = len(arr_width)
