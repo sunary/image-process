@@ -12,5 +12,6 @@ dist/*
 *.egg
 
 # Meta data
+*.pkl
 *.ckpt
 *.ckpt.meta

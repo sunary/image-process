@@ -3,6 +3,8 @@ __author__ = 'sunary'
 
 import cv2
 import numpy as np
+from using_opencv import xor_bit_image
+import os
 
 
 def add_edge(img, black=True):
@@ -132,7 +134,7 @@ def is_plate(img_plate):
         percent_color.append(np.sum(img_plate_color)*1.0/(height * width))
         haft_percent_color.append(np.sum(img_plate_color[height/4:height*3/4, width/4:width*3/4])*1.0/(height * width/4))
 
-    print haft_percent_color
+    # print haft_percent_color
     return percent_color[1] > 0.04 and percent_color[0] > percent_color[1] + 0.15 and\
             percent_color[0] + percent_color[1] > 0.5
 
@@ -230,10 +232,23 @@ def digit_recongize(img):
                         width_rect*1.0/height_rect > ratio[0] and width_rect*1.0/height_rect < ratio[1]:
                     rects.append((min_y, min_x, max_y + 1, max_x + 1))
 
+    nums = ''
     for rect in rects:
         cv2.imshow('digits %s' % (str(rect)), img[rect[0]:rect[2], rect[1]:rect[3]])
+        nums += str(get_number(img[rect[0]:rect[2], rect[1]:rect[3]]))
+
+    print nums
 
     # return img
+
+
+files_number = []
+for i in range(10):
+    files_number.append(os.path.dirname(__file__) + '/../resources/no_%s.jpg' % str(i))
+xor_bit_image.load_image(files_number)
+
+def get_number(img):
+    return xor_bit_image.get_number(img)
 
 
 if __name__ == '__main__':

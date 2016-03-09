@@ -111,8 +111,8 @@ def dectect_black_rect(img):
                         j += 1
                 i += 1
 
-
     return img
+
 
 def array_equal(arr1, arr2):
     for i in range(len(arr2)):
