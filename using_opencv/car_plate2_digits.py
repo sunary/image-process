@@ -5,6 +5,8 @@ import cv2
 import numpy as np
 from using_opencv import xor_bit_image
 import os
+import scipy.misc
+from pre_process import histogram_equalization
 
 
 def add_edge(img, black=True):
@@ -51,13 +53,13 @@ def color_detect(img):
     return mask
 
 
-def get_plate_flood(img_color, img):
+def get_plates_flood(img_color, img):
     height, width = img.shape[:2]
     ratio = [0.9, 1.6]
-    range_rect_width = (30, 120)
+    range_rect_width = (30, 300)
     check_point = []
 
-    img_copy = img.copy()
+    # img_copy = img.copy()
     rects = []
 
     for i in range(0, height - 1):
@@ -180,7 +182,15 @@ def remove_border(img):
 
         counter += 1
 
-    return img
+    range_number_color = (0.15, 0.40)
+
+    sum_color = np.sum(255 - img)
+    img_area = width * height * 255
+
+    if sum_color > range_number_color[0]* img_area and sum_color < range_number_color[1]* img_area:
+        return img
+
+    return None
 
 
 def inverte(img):
@@ -193,6 +203,7 @@ def digit_recongize(img):
     range_rect_height = (height*0.3, height*0.5)
 
     rects = []
+    img_numbers = []
 
     img_copy = img.copy()
     index = [(0, 1), (0, -1), (1, 0), (-1, 0)]
@@ -229,17 +240,25 @@ def digit_recongize(img):
                 width_rect = max_x - min_x
                 height_rect = max_y - min_y
                 if height_rect > range_rect_height[0] and height_rect < range_rect_height[1] and \
-                        width_rect*1.0/height_rect > ratio[0] and width_rect*1.0/height_rect < ratio[1]:
+                        width_rect *1.0/height_rect > ratio[0] and width_rect *1.0/height_rect < ratio[1]:
                     rects.append((min_y, min_x, max_y + 1, max_x + 1))
+                    img_numbers.append(img_from_black_point(checked_point, (height_rect + 1, width_rect + 1), (min_y, min_x)))
 
     nums = ''
-    for rect in rects:
-        cv2.imshow('digits %s' % (str(rect)), img[rect[0]:rect[2], rect[1]:rect[3]])
-        nums += str(get_number(img[rect[0]:rect[2], rect[1]:rect[3]]))
+    for i, img_num in enumerate(img_numbers):
+        cv2.imshow('digits %s' % i, img_num)
+        nums += str(get_number(img_num))
 
-    print nums
+    if nums:
+        print nums
 
-    # return img
+
+def img_from_black_point(black_point, shape, start):
+    new_img = np.full(shape, 255, dtype=np.uint8)
+    for p in black_point:
+        new_img[p[0] - start[0]][p[1] - start[1]] = 0
+
+    return new_img
 
 
 files_number = []
@@ -251,18 +270,28 @@ def get_number(img):
     return xor_bit_image.get_number(img)
 
 
-if __name__ == '__main__':
-    img_color = cv2.imread('/Users/sunary/Downloads/bs/xe2.jpg')
+def run(img_path):
+    img_color = cv2.imread(img_path)
+    height, width = img_color.shape[:2]
+    if width > 1000:
+        img_color = scipy.misc.imresize(img_color, (height*1000/width, 1000))
     img_gray = add_edge(img_color)
 
     img = color_detect(img_gray)
     cv2.imshow("rect detection", img)
-    rects = get_plate_flood(img_color, img.copy())
+    rects = get_plates_flood(img_color, img.copy())
 
     for r in rects:
-        _img = remove_border(img[r[0]:r[2], r[1]:r[3]])
-        digit_recongize(_img)
-        # cv2.imshow("rect detection %s" %(str(r)), _img)
+        # _img = histogram_equalization.ostu_algorithm(img_gray[r[0]:r[2], r[1]:r[3]])
+        _img = img[r[0]:r[2], r[1]:r[3]]
+        _img = remove_border(_img)
+        if _img is not None:
+            cv2.imshow("rect detection %s" %(str(r)), _img)
+            digit_recongize(_img)
 
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+
+
+if __name__ == '__main__':
+    run('/Users/sunary/Downloads/bs/new_02.jpg')

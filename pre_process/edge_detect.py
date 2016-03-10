@@ -1,6 +1,7 @@
 __author__ = 'sunary'
 
 
+import cv2
 from pre_process.noise_removal import NoiseRemoval
 from utils import helper
 import os
@@ -57,6 +58,15 @@ class EdgeDetect():
             edge_pix[i][j] = 0 if value < threshold else 0xffffff
 
         return edge_pix
+
+    def auto_canny(self, img, sigma=0.33):
+        v = np.median(img)
+
+        lower = int(max(0, (1.0 - sigma) * v))
+        upper = int(min(255, (1.0 + sigma) * v))
+        edged = cv2.Canny(img, lower, upper)
+
+        return edged
 
     def _sobel(self):
         return ([[-1, 0, 1],

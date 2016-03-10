@@ -75,7 +75,8 @@ class IrisDetect():
 
 if __name__ == '__main__':
     iris_detect = IrisDetect()
-    iris_detect.process('/../resources/haarcascade_frontalface_alt.xml', '/../resources/haarcascade_eye.xml',
+    iris_detect.process('/../resources/haarcascade_frontalface_alt.xml',
+                        '/../resources/haarcascade_eye.xml',
                         img_file='/../resources/me.jpg')
     cv2.waitKey(0)
     cv2.destroyAllWindows()

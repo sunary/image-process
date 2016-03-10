@@ -1,4 +1,6 @@
 __author__ = 'sunary'
+
+
 import input_data
 import tensorflow as tf
 

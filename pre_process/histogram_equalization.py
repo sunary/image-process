@@ -3,6 +3,7 @@ __author__ = 'sunary'
 
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 def normal(img):
@@ -14,8 +15,17 @@ def clahe(img):
     return clahe.apply(img)
 
 
-def adaptive(img):
+def binary(img):
+    _, bin_img = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY)
+    return bin_img
+
+
+def adaptive_mean(img):
     return cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 4)
+
+
+def adaptive_gauss(img):
+    return cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 4)
 
 
 def ostu_algorithm(img, blursize=3):
@@ -43,3 +53,31 @@ def ostu_algorithm(img, blursize=3):
     ret, otsu = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
     return otsu
+
+
+def preview_hist(img):
+    list_img = [img, normal(img), clahe(img)]
+    title_img = ['origin', 'normal', 'clahe']
+    for i in range(len(list_img)):
+        plt.subplot(2, 2, i + 1)
+        plt.imshow(list_img[i], 'gray')
+        plt.title(title_img[i])
+
+    plt.show()
+
+
+def preview_bin(img):
+    list_img = [img, binary(img), adaptive_mean(img), adaptive_gauss(img)]
+    title_img = ['origin', 'binary', 'adaptive mean', 'adaptive gauss']
+    for i in range(len(list_img)):
+        plt.subplot(2, 2, i + 1)
+        plt.imshow(list_img[i], 'gray')
+        plt.title(title_img[i])
+
+    plt.show()
+
+
+if __name__ == '__main__':
+    img = cv2.imread('/Users/sunary/Downloads/bs/bs_6789.jpg', cv2.THRESH_BINARY)
+    # preview_hist(img)
+    preview_bin(img)

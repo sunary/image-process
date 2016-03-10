@@ -31,7 +31,7 @@ def deskew(image, angle):
     return result
 
 
-def detect_line1(img):
+def detect_line_cv2(img):
     img = histogram_equalization.ostu_algorithm(img)
 
     edge = EdgeDetect()
@@ -47,7 +47,7 @@ def detect_line1(img):
     return img
 
 
-def detect_line2(img):
+def detect_line(img):
     img = histogram_equalization.ostu_algorithm(img)
 
     edge = EdgeDetect()
@@ -166,17 +166,22 @@ def recognize(img):
     cv2.imshow("lines detection", np.hstack([img, rect_image]))
 
 
-if __name__ == '__main__':
-    # img = cv2.imread('/Users/sunary/Downloads/TB015-1-10-2015/PA02TB0015598001-KT.jpg')
-    img = cv2.imread('/Users/sunary/Downloads/TB015-1-10-2015/PA02TB0015598001-KT.jpg', cv2.THRESH_BINARY)
-    height, width = img.shape[:2]
-    # img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-    img = img[:-height/3, width/6:-width/6]
-    print img.shape
-    img = recognize(img)
-    img = color_detection(img)
-
-    black_rect = dectect_black_rect(img)
-    cv2.imshow("lines detection", np.hstack([img, black_rect]))
+def run(img_path):
+    # img = cv2.imread(img_path)
+    img = cv2.imread(img_path, cv2.THRESH_BINARY)
+    compare_hist_equalization(img)
+    # height, width = img.shape[:2]
+    # # img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    # img = img[:-height/3, width/6:-width/6]
+    # print img.shape
+    # img = recognize(img)
+    # img = color_detection(img)
+    #
+    # black_rect = dectect_black_rect(img)
+    # cv2.imshow("lines detection", np.hstack([img, black_rect]))
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+
+
+if __name__ == '__main__':
+    run('/Users/sunary/Downloads/TB015-1-10-2015/PA02TB0015598001-KT.jpg')

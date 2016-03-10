@@ -3,8 +3,6 @@ __author__ = 'sunary'
 
 import cv2
 import numpy as np
-from sklearn.externals import joblib
-from skimage.feature import hog
 
 
 def color_detect(img):
@@ -16,7 +14,6 @@ def color_detect(img):
 
     # cv2.imshow("color detection", np.hstack([img, mask]))
     return mask
-
 
 
 def get_plate(img):
@@ -151,7 +148,6 @@ def digit_recongize(img):
     ratio = [0.22, 0.5]
     range_rect_height = (height*0.39, height*0.46)
 
-    clf, pp = joblib.load('digits_cls.pkl')
     rects = []
 
     img_copy = img.copy()
@@ -195,30 +191,11 @@ def digit_recongize(img):
     for rect in rects:
         cv2.imshow('digits %s' % (str(rect)), img[rect[0]:rect[0] + rect[2], rect[1]:rect[1] + rect[3]])
 
-    return
-    for rect in rects:
-        cv2.rectangle(img, (rect[0], rect[1]), (rect[0] + rect[2], rect[1] + rect[3]), (0), 2)
-
-        len_rect = int(rect[3] * 1.6)
-        pt1 = int(rect[1] + rect[3]/2 - len_rect/2)
-        pt2 = int(rect[0] + rect[2]/2 - len_rect/2)
-        roi = img[pt1:pt1+len_rect, pt2:pt2+len_rect]
-
-        roi = cv2.resize(roi, (28, 28), interpolation=cv2.INTER_AREA)
-        roi = cv2.dilate(roi, (3, 3))
-
-        roi_hog_fd = hog(roi, orientations=9, pixels_per_cell=(14, 14), cells_per_block=(1, 1), visualise=False)
-        print roi_hog_fd
-        roi_hog_fd = pp.transform(np.array([roi_hog_fd], 'float64'))
-        nbr = clf.predict(roi_hog_fd)
-        print nbr[0]
-        cv2.putText(img, str(nbr[0]), (rect[0], rect[1]), cv2.FONT_HERSHEY_DUPLEX, 2, (0), 3)
-
     return img
 
 
-if __name__ == '__main__':
-    img = cv2.imread('/Users/sunary/Downloads/bs/bs_6789.jpg', cv2.THRESH_BINARY)
+def run(img_path):
+    img = cv2.imread(img_path, cv2.THRESH_BINARY)
     img = color_detect(img)
     # cv2.imshow("color detection", img)
     img = get_plate_flood(img)
@@ -229,3 +206,7 @@ if __name__ == '__main__':
 
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+
+
+if __name__ == '__main__':
+    run('/Users/sunary/Downloads/bs/bs_6789.jpg')
