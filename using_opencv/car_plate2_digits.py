@@ -6,27 +6,21 @@ import numpy as np
 from using_opencv import xor_bit_image
 import os
 import scipy.misc
-from pre_process import histogram_equalization
+from using_opencv import deskew
 
 
-def add_edge(img, black=True):
+def add_edge(img, color=False):
     height, width = img.shape[:2]
-    img_gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 
-    if not black:
-        img_gray = inverte(img_gray.copy())
+    mask_value = np.array([0, 0, 0]) if color else 0
 
     img_edge = auto_canny(img)
     for i in np.arange(height):
         for j in np.arange(width):
-            if black:
-                if img_edge[i][j] == 255:
-                    img_gray[i][j] = 0
-            else:
-                if img_edge[i][j] == 255:
-                    img_gray[i][j] = 255
+            if img_edge[i][j] == 255:
+                img[i][j] = mask_value
 
-    return img_gray
+    return img
 
 
 def auto_canny(img, sigma=0.33):
@@ -39,24 +33,30 @@ def auto_canny(img, sigma=0.33):
     return edged
 
 
-def color_detect(img):
-    lower = np.array((175, 175, 175), dtype=np.uint8)
-    upper = np.array((255, 255, 255), dtype=np.uint8)
+def color_detect(img, hsv=False):
 
-    if len(img.shape) == 3:
-        mask = cv2.inRange(img, lower, upper)
+    if hsv:
+        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+
+        lower_white = np.array([0, 0, 120], dtype=np.uint8)
+        upper_white = np.array([255, 45, 255], dtype=np.uint8)
+        mask = cv2.inRange(hsv, lower_white, upper_white)
     else:
-        mask = cv2.inRange(img, np.mean(lower), np.mean(upper))
+        lower_white = np.array((175, 175, 175), dtype=np.uint8)
+        upper_white = np.array((255, 255, 255), dtype=np.uint8)
 
-    # output = cv2.bitwise_and(img, img, mask=mask)
-    # cv2.imshow("color detection", np.hstack([img, mask]))
+        if len(img.shape) == 3:
+            mask = cv2.inRange(img, lower_white, upper_white)
+        else:
+            mask = cv2.inRange(img, np.mean(lower_white), np.mean(upper_white))
+
     return mask
 
 
 def get_plates_flood(img_color, img):
     height, width = img.shape[:2]
     ratio = [0.9, 1.6]
-    range_rect_width = (30, 300)
+    range_rect_width = (50, 300)
     check_point = []
 
     # img_copy = img.copy()
@@ -83,7 +83,7 @@ def get_plates_flood(img_color, img):
                 for idx in index:
                     new_i = i + idx[0]
                     new_j = j + idx[1]
-                    if new_i > 0 and new_i < height - 1 and new_j > 0 and new_j < width - 1 and \
+                    if (new_i > 0 and new_i < height - 1) and (new_j > 0 and new_j < width - 1) and \
                             img[new_i][new_j] == 255 and (new_i, new_j) not in set_relate_point:
                         if new_i > max_y:
                             max_y = new_i
@@ -104,8 +104,8 @@ def get_plates_flood(img_color, img):
             width_rect = max_x - min_x
             height_rect = max_y - min_y
             if width_rect > range_rect_width[0] and width_rect < range_rect_width[1] and \
-                    width_rect*1.0/height_rect > ratio[0] and width_rect*1.0/height_rect < ratio[1] and\
-                    is_plate(img_color[min_y:max_y + 1, min_x:max_x + 1]):
+                    width_rect *1.0/height_rect > ratio[0] and width_rect *1.0/height_rect < ratio[1] and \
+                    check_plate_by_color(img_color[min_y:max_y + 1, min_x:max_x + 1]):
                 # cv2.rectangle(img_copy, (min_x, min_y), (max_x, max_y), (255), 2)
                 rects.append((min_y, min_x, max_y + 1, max_x + 1))
 
@@ -115,7 +115,8 @@ def get_plates_flood(img_color, img):
     return rects
 
 
-def is_plate(img_plate):
+def check_plate_by_color(img_plate):
+    return True
     height, width = img_plate.shape[:2]
 
     boundaries = [((175, 175, 175), (255, 255, 255)), ((0, 0, 0), (80, 80, 80))]
@@ -134,20 +135,18 @@ def is_plate(img_plate):
                 img_plate_color[i][j] = np.mean(img_plate[i][j]) > np.mean(lower) and np.mean(img_plate[i][j]) < np.mean(upper)
 
         percent_color.append(np.sum(img_plate_color)*1.0/(height * width))
-        haft_percent_color.append(np.sum(img_plate_color[height/4:height*3/4, width/4:width*3/4])*1.0/(height * width/4))
+        # haft_percent_color.append(np.sum(img_plate_color[height/4:height*3/4, width/4:width*3/4])*1.0/(height * width/4))
 
+    # print percent_color
     # print haft_percent_color
-    return percent_color[1] > 0.04 and percent_color[0] > percent_color[1] + 0.15 and\
+    return percent_color[1] > 0.04 and percent_color[0] > percent_color[1] + 0.15 and \
             percent_color[0] + percent_color[1] > 0.5
 
 
 def remove_border(img):
-    height, width = img.shape[:2]
+    img = deskew.deskew(img, is_binary=True)
 
-    # img = np.vstack((np.full((1, width), 0, dtype=np.uint8), img, np.full((1, width), 0, dtype=np.uint8)))
-    # height += 2
-    # img = np.column_stack((np.full((height, 1), 0, dtype=np.uint8), img, np.full((height, 1), 0, dtype=np.uint8)))
-    # width += 2
+    height, width = img.shape[:2]
 
     changed_point = []
     for j in range(width):
@@ -184,31 +183,29 @@ def remove_border(img):
 
     range_number_color = (0.15, 0.40)
 
-    sum_color = np.sum(255 - img)
     img_area = width * height * 255
+    sum_color = img_area - np.sum(img)
 
-    if sum_color > range_number_color[0]* img_area and sum_color < range_number_color[1]* img_area:
+    if sum_color > range_number_color[0] * img_area and sum_color < range_number_color[1] * img_area:
         return img
 
     return None
 
 
-def inverte(img):
-    return 255 - img
-
-
 def digit_recongize(img):
     height, width = img.shape[:2]
-    ratio = [0.15, 0.5]
-    range_rect_height = (height*0.3, height*0.5)
+    ratio = [0.2, 0.55]
+    range_rect_height = (height*0.25, height*0.45)
 
     rects = []
     img_numbers = []
+    number_center_point = []
 
     img_copy = img.copy()
     index = [(0, 1), (0, -1), (1, 0), (-1, 0)]
-    for i in range(0, height):
-        for j in range(width):
+
+    for j in range(width):
+        for i in range(height):
             if img_copy[i][j] == 0:
                 min_y = max_y = i
                 min_x = max_x = j
@@ -239,18 +236,23 @@ def digit_recongize(img):
 
                 width_rect = max_x - min_x
                 height_rect = max_y - min_y
+
                 if height_rect > range_rect_height[0] and height_rect < range_rect_height[1] and \
                         width_rect *1.0/height_rect > ratio[0] and width_rect *1.0/height_rect < ratio[1]:
                     rects.append((min_y, min_x, max_y + 1, max_x + 1))
                     img_numbers.append(img_from_black_point(checked_point, (height_rect + 1, width_rect + 1), (min_y, min_x)))
+                    number_center_point.append(((min_y + max_y)/2, (min_x + max_x)/2))
 
-    nums = ''
+    plate_nums = [[], []]
     for i, img_num in enumerate(img_numbers):
-        cv2.imshow('digits %s' % i, img_num)
-        nums += str(get_number(img_num))
+        # cv2.imshow('digits %s' % str(number_center_point[i]), img_num)
+        num = get_number(img_num)
+        if number_center_point[i][0] < height/2:
+            plate_nums[0].append(num)
+        else:
+            plate_nums[1].append(num)
 
-    if nums:
-        print nums
+    return plate_nums
 
 
 def img_from_black_point(black_point, shape, start):
@@ -271,27 +273,34 @@ def get_number(img):
 
 
 def run(img_path):
+    using_hsv = True
+
     img_color = cv2.imread(img_path)
     height, width = img_color.shape[:2]
     if width > 1000:
         img_color = scipy.misc.imresize(img_color, (height*1000/width, 1000))
-    img_gray = add_edge(img_color)
 
-    img = color_detect(img_gray)
+    if using_hsv:
+        img_color = add_edge(img_color, color=True)
+        img = color_detect(img_color, hsv=True)
+    else:
+        img_gray = add_edge(img_color)
+        img = color_detect(img_gray)
+
     cv2.imshow("rect detection", img)
     rects = get_plates_flood(img_color, img.copy())
 
     for r in rects:
-        # _img = histogram_equalization.ostu_algorithm(img_gray[r[0]:r[2], r[1]:r[3]])
         _img = img[r[0]:r[2], r[1]:r[3]]
+        # cv2.imshow("rect detection %s" %(str(r)), _img)
         _img = remove_border(_img)
         if _img is not None:
             cv2.imshow("rect detection %s" %(str(r)), _img)
-            digit_recongize(_img)
+            print digit_recongize(_img)
 
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
 
 if __name__ == '__main__':
-    run('/Users/sunary/Downloads/bs/new_02.jpg')
+    run('/Users/sunary/Downloads/bs/new_04.jpg')

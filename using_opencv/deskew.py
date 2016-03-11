@@ -19,7 +19,13 @@ def compute_skew(img, is_binary=True, canny=True):
         img = edge.process(img)
 
     line = LineDetect()
-    return 180 - line.process(img, binary_image=True)[1]
+    angle = line.process(img, binary_image=True)[1]
+
+    angle = -angle if angle < 90 else (180 - angle)
+    angle = -(90 - angle) if angle > 45 else angle
+    angle = -(90 + angle) if angle < -45 else angle
+
+    return angle
 
 
 def auto_canny(img, sigma=0.33):
@@ -35,9 +41,15 @@ def auto_canny(img, sigma=0.33):
 def deskew(img, is_binary=True):
     angle = compute_skew(img, is_binary)
 
+    if not angle:
+        return img
+
     image_center = (np.size(img, 1)/2, np.size(img, 0)/2)
 
     rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1)
     deskewed = cv2.warpAffine(img, rot_mat, (np.size(img, 1), np.size(img, 0)), flags=cv2.INTER_LINEAR)
+
+    if is_binary:
+        deskewed = histogram_equalization.binary(deskewed)
 
     return deskewed
