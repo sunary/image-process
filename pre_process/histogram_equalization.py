@@ -67,8 +67,8 @@ def preview_hist(img):
 
 
 def preview_bin(img):
-    list_img = [img, binary(img), adaptive_mean(img), adaptive_gauss(img)]
-    title_img = ['origin', 'binary', 'adaptive mean', 'adaptive gauss']
+    list_img = [binary(img), adaptive_mean(img), adaptive_gauss(img), ostu_algorithm(img)]
+    title_img = ['binary', 'adaptive mean', 'adaptive gauss', 'ostu algorithm']
     for i in range(len(list_img)):
         plt.subplot(2, 2, i + 1)
         plt.imshow(list_img[i], 'gray')
@@ -77,7 +77,23 @@ def preview_bin(img):
     plt.show()
 
 
+def preview_combine(img, hist_type=0):
+    if hist_type == 0:
+        img = normal(img)
+    elif hist_type == 1:
+        img = clahe(img)
+
+    list_img = [binary(img), adaptive_mean(img), adaptive_gauss(img), ostu_algorithm(img)]
+    title_img = ['binary', 'adaptive mean', 'adaptive gauss', 'ostu algorithm']
+    for i in range(len(list_img)):
+        plt.subplot(2, 2, i + 1)
+        plt.imshow(list_img[i], 'gray')
+        plt.title(title_img[i])
+
+    plt.show()
+
+
+
 if __name__ == '__main__':
-    img = cv2.imread('/Users/sunary/Downloads/bs/bs_6789.jpg', cv2.THRESH_BINARY)
-    # preview_hist(img)
-    preview_bin(img)
+    img = cv2.imread('/Users/sunary/Downloads/bs/new_03.jpg', cv2.THRESH_BINARY)
+    preview_combine(img, 0)

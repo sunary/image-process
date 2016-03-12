@@ -5,16 +5,16 @@ import cv2
 import numpy as np
 from using_opencv import xor_bit_image
 import os
-import scipy.misc
 from using_opencv import deskew
+from pre_process import histogram_equalization
 
 
 def add_edge(img, color=False):
     height, width = img.shape[:2]
 
     mask_value = np.array([0, 0, 0]) if color else 0
-
     img_edge = auto_canny(img)
+
     for i in np.arange(height):
         for j in np.arange(width):
             if img_edge[i][j] == 255:
@@ -51,6 +51,12 @@ def color_detect(img, hsv=False):
             mask = cv2.inRange(img, np.mean(lower_white), np.mean(upper_white))
 
     return mask
+
+
+def binary_detect(img):
+    img = histogram_equalization.normal(img)
+    img = histogram_equalization.binary(img)
+    return img
 
 
 def get_plates_flood(img_color, img):
@@ -245,7 +251,7 @@ def digit_recongize(img):
 
     plate_nums = [[], []]
     for i, img_num in enumerate(img_numbers):
-        # cv2.imshow('digits %s' % str(number_center_point[i]), img_num)
+        # cv2.imshow('digit recognized %s' % str(number_center_point[i]), img_num)
         num = get_number(img_num)
         if number_center_point[i][0] < height/2:
             plate_nums[0].append(num)
@@ -273,21 +279,27 @@ def get_number(img):
 
 
 def run(img_path):
-    using_hsv = True
+    method = ['color_hsv', 'color_rbg', 'binary_convert']
+    method_id = 0
+    print method[method_id]
 
     img_color = cv2.imread(img_path)
     height, width = img_color.shape[:2]
     if width > 1000:
-        img_color = scipy.misc.imresize(img_color, (height*1000/width, 1000))
+        img_color = cv2.resize(img_color, (1000, height*1000/width))
 
-    if using_hsv:
+    if method_id == 0:
         img_color = add_edge(img_color, color=True)
+        cv2.imshow("add border", img_color)
         img = color_detect(img_color, hsv=True)
-    else:
+    elif method_id == 1:
         img_gray = add_edge(img_color)
         img = color_detect(img_gray)
+    elif method_id == 2:
+        img = cv2.cvtColor(img_color, cv2.COLOR_RGB2GRAY)
+        img = binary_detect(img)
 
-    cv2.imshow("rect detection", img)
+    cv2.imshow("color selection", img)
     rects = get_plates_flood(img_color, img.copy())
 
     for r in rects:

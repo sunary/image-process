@@ -5,7 +5,6 @@ import cv2
 import numpy as np
 from using_opencv import xor_bit_image
 import os
-import scipy.misc
 from using_opencv import deskew
 
 
@@ -214,7 +213,7 @@ def digit_recongize(img):
 
     plate_nums = [[], []]
     for i, img_num in enumerate(img_numbers):
-        # cv2.imshow('digits %s' % str(number_center_point[i]), img_num)
+        # cv2.imshow('digit recognized %s' % str(number_center_point[i]), img_num)
         num = get_number(img_num)
         if number_center_point[i][0] < height/2:
             plate_nums[0].append(num)
@@ -247,7 +246,7 @@ def run(img_path):
     img_color = cv2.imread(img_path)
     height, width = img_color.shape[:2]
     if width > 1000:
-        img_color = scipy.misc.imresize(img_color, (height*1000/width, 1000))
+        img_color = cv2.resize(img_color, (1000, height*1000/width))
 
     if using_hsv:
         img_color = add_edge(img_color, color=True)
@@ -256,7 +255,7 @@ def run(img_path):
         img_gray = add_edge(img_color)
         img = color_detect(img_gray)
 
-    # cv2.imshow("rect detection", img)
+    # cv2.imshow("color detection", img)
     rects = get_plates_flood(img_color, img.copy())
 
     for r in rects:

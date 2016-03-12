@@ -63,7 +63,7 @@ class NoiseRemoval():
         return pix_removal
 
     def opening(self, pix):
-        pix = helper.gray_to_bin(pix)
+        pix = helper.gray_to_binary(pix)
         pix = self.morphology.opening(pix)
         pix = helper.binary_to_gray(pix)
 

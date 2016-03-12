@@ -4,7 +4,7 @@ __author__ = 'sunary'
 from PIL import Image
 
 
-def gray_to_bin(pix):
+def gray_to_binary(pix):
     '''
     Examples:
         >>> gray_to_bin([[0xffffff, 0xffffff], [0, 0]])
@@ -17,6 +17,7 @@ def gray_to_bin(pix):
         bin_pix.append(bin_p)
 
     return bin_pix
+
 
 def binary_to_gray(pix):
     '''
@@ -32,6 +33,7 @@ def binary_to_gray(pix):
 
     return pix_gray
 
+
 def convert_gray(pix):
     pix_gray = [[0] * len(pix[0]) for _ in range(len(pix))]
 
@@ -40,6 +42,7 @@ def convert_gray(pix):
             pix_gray[i][j] = (((pix[i][j] & 0x00ff0000) >> 16) + ((pix[i][j] & 0x0000ff00) >> 8) + (pix[i][j] & 0x000000ff))/3
 
     return pix_gray
+
 
 def read_image(img_file):
     img = Image.open(img_file)
@@ -51,6 +54,7 @@ def read_image(img_file):
             pix[i][j] = (data[j * img.size[0] + i][0] << 16) | (data[j * img.size[0] + i][1] << 8) | (data[j * img.size[0] + i][2])
 
     return pix
+
 
 def save_image(pix, img_file, gray_image=False):
     with open(img_file, 'wb+'):
