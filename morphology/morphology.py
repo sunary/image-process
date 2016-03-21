@@ -2,6 +2,7 @@ __author__ = 'sunary'
 
 
 from pprint import pprint
+from utils import helper
 
 
 class Morphology():
@@ -113,7 +114,7 @@ class Morphology():
                             for a in range(3):
                                 for b in range(3):
                                     grid[a][b] = pix[i + self.index[a][b][0]][j + self.index[a][b][1]]
-                            if self.match_filter(f, grid) and self.count_connectivity(grid) == 1 and not self.end_point(grid):
+                            if self.match_filter(f, grid) and helper.count_connectivity(grid) == 1 and not self.end_point(grid):
                                 morphology_pix[i][j] = 0
                                 have_change = True
                 pix = morphology_pix
@@ -166,22 +167,6 @@ class Morphology():
     def skeleton(self, pix):
 
         return pix
-
-    def count_connectivity(self, grid):
-        connectivity_number = 0
-        need_new_connectivity = True
-
-        for pos_bound in self.pixel_bound:
-            if grid[pos_bound[0] + 1][pos_bound[1] + 1]:
-                if need_new_connectivity:
-                    connectivity_number += 1
-                    need_new_connectivity = False
-                if pos_bound == self.pixel_bound[-1] and grid[self.pixel_bound[-1][0] + 1][self.pixel_bound[-1][1] + 1]:
-                    connectivity_number = (connectivity_number - 1) if connectivity_number > 1 else connectivity_number
-            else:
-                need_new_connectivity = True
-
-        return connectivity_number
 
     def match_filter(self, filer, grid):
         for i in range(len(filer)):

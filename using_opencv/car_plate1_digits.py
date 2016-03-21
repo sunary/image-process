@@ -55,7 +55,7 @@ def color_detect(img, hsv=False):
 def get_plates_flood(img_color, img):
     height, width = img.shape[:2]
     ratio = [0.9, 1.6]
-    range_rect_width = (100, 600)
+    range_rect_width = (50, 600)
     check_point = []
 
     rects = []
@@ -220,7 +220,7 @@ def digit_recongize(img):
         else:
             plate_nums[1].append(num)
 
-    return plate_nums[1]
+    return plate_nums
 
 
 def img_from_black_point(black_point, shape, start):
@@ -255,7 +255,7 @@ def run(img_path):
         img_gray = add_edge(img_color)
         img = color_detect(img_gray)
 
-    # cv2.imshow("color detection", img)
+    cv2.imshow("color detection", img)
     rects = get_plates_flood(img_color, img.copy())
 
     for r in rects:
@@ -271,4 +271,4 @@ def run(img_path):
 
 
 if __name__ == '__main__':
-    run('/Users/sunary/Downloads/bs/bs_27889.jpg')
+    run('/Users/sunary/bs.jpg')

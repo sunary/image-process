@@ -7,7 +7,7 @@ from PIL import Image
 def gray_to_binary(pix):
     '''
     Examples:
-        >>> gray_to_bin([[0xffffff, 0xffffff], [0, 0]])
+        >>> gray_to_binary([[0xffffff, 0xffffff], [0, 0]])
         [[0, 0], [1, 1]]
     '''
     bin_pix = []
@@ -72,6 +72,31 @@ def save_image(pix, img_file, gray_image=False):
                 img.putpixel((i, j), ((pix[i][j] & 0x00ff0000) >> 16, (pix[i][j] & 0x0000ff00) >> 8, (pix[i][j] & 0x000000ff)))
 
     img.save(img_file)
+
+
+pixel_bound = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]]
+def count_connectivity(grid):
+    '''
+    Examples:
+        >>> count_connectivity([[1, 1, 0], [1, 1, 1], [1, 1, 0]])
+        2
+        >>> count_connectivity([[0, 1, 1], [1, 1, 1], [1, 1, 1]])
+        1
+    '''
+    connectivity_number = 0
+    need_new_connectivity = True
+
+    for pos_bound in pixel_bound:
+        if grid[pos_bound[0] + 1][pos_bound[1] + 1]:
+            if need_new_connectivity:
+                connectivity_number += 1
+                need_new_connectivity = False
+            if pos_bound == pixel_bound[-1] and grid[pixel_bound[-1][0] + 1][pixel_bound[-1][1] + 1]:
+                connectivity_number = (connectivity_number - 1) if connectivity_number > 1 else connectivity_number
+        else:
+            need_new_connectivity = True
+
+    return connectivity_number
 
 
 if __name__ == '__main__':
