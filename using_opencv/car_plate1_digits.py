@@ -160,7 +160,7 @@ def remove_border(img):
     return None
 
 
-def digit_recongize(img):
+def digit_recognize(img):
     height, width = img.shape[:2]
     ratio = [0.2, 0.55]
     range_rect_height = (height*0.25, height*0.45)
@@ -264,7 +264,7 @@ def run(img_path):
         _img = remove_border(_img)
         if _img is not None:
             # cv2.imshow("rect detection %s" %(str(r)), _img)
-            print digit_recongize(_img)
+            print digit_recognize(_img)
 
     cv2.waitKey(0)
     cv2.destroyAllWindows()
