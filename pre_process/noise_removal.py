@@ -2,6 +2,7 @@ __author__ = 'sunary'
 
 
 import math
+import copy
 from utils import helper
 from morphology.morphology import Morphology
 
@@ -40,7 +41,7 @@ class NoiseRemoval():
         '''
         Median method
         '''
-        pix_removal = [pix[i][:] for i in range(len(pix))]
+        pix_removal = copy.deepcopy(pix)
 
         for i in range(len(self.mask)/2, len(pix) - len(self.mask)/2):
             for j in range(len(self.mask)/2, len(pix[0]) - len(self.mask)/2):

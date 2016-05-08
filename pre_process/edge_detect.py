@@ -87,12 +87,14 @@ class EdgeDetect():
         #         [2, 8, 12, 8, 2],
         #         [1, 4, 6, 4, 1]])
 
+    @staticmethod
     def _robert(self):
         return ([[1, 0],
                 [0, -1]],
                 [[0, 1],
                 [-1, 0]])
 
+    @staticmethod
     def _prewitt(self):
         return ([[-1, 0, 1],
                 [-1, 0, 1],
