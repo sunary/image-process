@@ -1,11 +1,11 @@
 __author__ = 'sunary'
 
 
+import os
 import cv2
 import numpy as np
+from preprocess import deskew, color_processor
 from using_opencv import xor_bit_image
-import os
-from using_opencv import deskew, color_processor
 
 
 def get_plates_flood(img_color, img):

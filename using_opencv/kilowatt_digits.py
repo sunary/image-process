@@ -1,78 +1,50 @@
 __author__ = 'sunary'
 
 
+from os import listdir
+from os.path import isfile, join
+import bottleneck as bn
 import cv2
 import numpy as np
-import bottleneck as bn
-import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-from pre_process.line_detect import LineDetect
-from pre_process.edge_detect import EdgeDetect
-from pre_process import histogram_equalization
+from preprocess import deskew, edge_detect, line_detect
 
 
-def compute_skew(image):
-    image = histogram_equalization.ostu_algorithm(image)
-
-    edge = EdgeDetect()
-    image = edge.process(image)
-    # cv2.imshow('edge detect', image)
-
-    line = LineDetect()
-    return 180 - line.process(image, binary_image=True)[1]
-
-
-def deskew(image, angle):
-    image_center = (np.size(image, 1)/2, np.size(image, 0)/2)
-
-    rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1)
-    result = cv2.warpAffine(image, rot_mat, (np.size(image, 1), np.size(image, 0)), flags=cv2.INTER_LINEAR)
-
-    return result
-
-
-def detect_line_cv2(img):
-    img = histogram_equalization.ostu_algorithm(img)
-
-    edge = EdgeDetect()
-    img = edge.process(img)
-    # cv2.imshow('edge detect', img)
-
-    lines = cv2.HoughLinesP(img, 1, np.pi/2, 2, minLineLength=200, maxLineGap=10)
+def detect_line_hough(img):
+    img_edge = edge_detect.full_detect(img, is_binary=False)
+    lines = cv2.HoughLinesP(img_edge, 1, np.pi/2, 2, minLineLength=200, maxLineGap=10)
 
     if lines is not None:
         for x1, y1, x2, y2 in lines[0]:
-            cv2.line(img, (x1, y1), (x2, y2), (255, 255, 255), 3)
+            # print (x1, y1), (x2, y2)
+            cv2.line(img, (x1, y1), (x2, y2), (255, 255, 255), 1)
 
     return img
 
 
 def detect_line(img):
-    img = histogram_equalization.ostu_algorithm(img)
+    img_edge = edge_detect.full_detect(img, is_binary=False)
 
-    edge = EdgeDetect()
-    img = edge.process(img)
-    cv2.imshow('edge detect', img)
-
-    sum_x = np.sum(img, axis=0)
+    sum_x = np.sum(img_edge, axis=0)
     # max_xs = bn.argpartsort(-sum_x, 10)[:10]
     max_xs = sum_x.argsort()[-10:]
 
-    sum_y = np.sum(img, axis=1)
+    sum_y = np.sum(img_edge, axis=1)
     max_ys = bn.argpartsort(-sum_y, 10)[:10]
 
-    height, width = img.shape[:2]
+    height, width = img_edge.shape[:2]
 
     for x in max_xs:
-        cv2.line(img, (x, 0), (x, height), (255, 255, 255), 3)
+        # print (x, 0), (x, height)
+        cv2.line(img, (x, 0), (x, height), (255, 255, 255), 1)
 
     for y in max_ys:
-        cv2.line(img, (0, y), (width, y), (255, 255, 255), 3)
+        # print (0, y), (width, y)
+        cv2.line(img, (0, y), (width, y), (255, 255, 255), 1)
 
     return img
 
 
-def dectect_black_rect(img):
+def detect_black_rect(img):
     height, width = img.shape[:2]
     get_percent = 0.01*255
     min_width, min_height = 100, 40
@@ -94,7 +66,7 @@ def dectect_black_rect(img):
 
             while i < len(arr_height):
                 height_rect = arr_height[i]
-                if (array_equal(img[y + height_rect - 1:y + height_rect + 2, x - 1:x + 2], corner2)):
+                if array_equal(img[y + height_rect - 1:y + height_rect + 2, x - 1:x + 2], corner2):
                     arr_width = np.arange(min_width, width - x - 1)[::-1]
                     j = 0
 
@@ -133,55 +105,49 @@ def color_detection(img):
         # output = cv2.bitwise_and(img, img, mask = mask)
 
         return mask
-        cv2.imshow("color detection", np.hstack([img, mask]))
 
 
-def compare_hist_equalization(img):
-    plt.subplot(2, 2, 1)
-    plt.imshow(histogram_equalization.normal(img), cmap=cm.Greys_r)
-    plt.title('normal')
+def make_deskew(img):
+    height, width = img.shape[:2]
 
-    plt.subplot(2, 2, 2)
-    plt.imshow(histogram_equalization.clahe(img), cmap=cm.Greys_r)
-    plt.title('clahe')
-
-    plt.subplot(2, 2, 3)
-    plt.imshow(histogram_equalization.adaptive(img), cmap=cm.Greys_r)
-    plt.title('adaptive')
-
-    plt.subplot(2, 2, 4)
-    plt.imshow(histogram_equalization.ostu_algorithm(img), cmap=cm.Greys_r)
-    plt.title('ostu')
-
-    plt.show()
-
-
-def recognize(img):
-    angle = compute_skew(img)
-    deskewed_image = deskew(img, angle)
+    angle = deskew.compute_skew(img[height/4:height*3/4, width/4:width*3/4], is_binary=False)
+    deskewed_image = deskew.deskew(img, angle=angle, is_binary=False)
 
     return deskewed_image
-    rect_image = detect_line2(deskewed_image)
-
-    cv2.imshow("lines detection", np.hstack([img, rect_image]))
 
 
 def run(img_path):
-    # img = cv2.imread(img_path)
     img = cv2.imread(img_path, cv2.THRESH_BINARY)
-    compare_hist_equalization(img)
-    # height, width = img.shape[:2]
-    # # img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-    # img = img[:-height/3, width/6:-width/6]
-    # print img.shape
-    # img = recognize(img)
-    # img = color_detection(img)
-    #
-    # black_rect = dectect_black_rect(img)
-    # cv2.imshow("lines detection", np.hstack([img, black_rect]))
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    height, width = img.shape[:2]
+    if width > 1000:
+        img = cv2.resize(img, (1000, height*1000/width))
+
+    # img = color_processor.auto_canny(img)
+    # cv2.imshow('color selection', img)
+
+    img_deskew = make_deskew(img)
+    img_lines = detect_line_hough(img_deskew)
+    # img_lines = line_detect.houghlines(img)
+
+    cv2.imshow('lines detection', np.hstack([img, img_lines]))
+
+
+def run_list(path):
+    img_files = [join(path, f) for f in listdir(path) if isfile(join(path, f))]
+    id = 0
+
+    while True:
+        run(img_files[id])
+        pressed_key = cv2.waitKey()
+        if pressed_key == ord('a'): # up
+            id = (id - 1 + len(img_files)) %(len(img_files))
+            continue
+        elif pressed_key == ord('s'): # down
+            id = (id + 1) %(len(img_files))
+            continue
+        else:
+            break
 
 
 if __name__ == '__main__':
-    run('/Users/sunary/Downloads/TB015-1-10-2015/PA02TB0015598001-KT.jpg')
+    run_list('/Users/sunary/Downloads/vzota/TB015-1-10-2015')

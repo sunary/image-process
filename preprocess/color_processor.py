@@ -3,7 +3,7 @@ __author__ = 'sunary'
 
 import cv2
 import numpy as np
-from pre_process import histogram_equalization
+from preprocess import histogram_equalization
 
 
 def add_edge(img, color=False):

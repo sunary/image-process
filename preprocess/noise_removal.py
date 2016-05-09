@@ -5,13 +5,14 @@ import math
 import copy
 from utils import helper
 from morphology.morphology import Morphology
+import cv2
+import numpy as np
 
 
 class NoiseRemoval():
 
     def __init__(self):
-        self.load_mask()
-        self.morphology = Morphology()
+        pass
 
     def load_mask(self, mask=None):
         self.mask = [[1, 1, 1],
@@ -37,10 +38,11 @@ class NoiseRemoval():
         self.mask = mask or self.mask
         self.sum_mask = sum([sum(i) for i in self.mask])
 
-    def median(self, pix, median=True):
+    def basic(self, pix, median=True):
         '''
         Median method
         '''
+        self.load_mask()
         pix_removal = copy.deepcopy(pix)
 
         for i in range(len(self.mask)/2, len(pix) - len(self.mask)/2):
@@ -63,9 +65,15 @@ class NoiseRemoval():
 
         return pix_removal
 
+    def gaussian(self, img):
+        kernel = np.ones((5,5), np.float32)/25
+        return cv2.filter2D(img,-1,kernel)
+
     def opening(self, pix):
+        morphology = Morphology()
+
         pix = helper.gray_to_binary(pix)
-        pix = self.morphology.opening(pix)
+        pix = morphology.opening(pix)
         pix = helper.binary_to_gray(pix)
 
         return pix
@@ -78,4 +86,4 @@ if __name__ == '__main__':
            [100, 195, 200, 200, 100,],
            [100, 200, 205, 195, 100,],
            [100, 100, 100, 100, 100,]]
-    print noise_removal.median(pix)
+    print noise_removal.basic(pix)

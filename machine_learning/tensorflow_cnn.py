@@ -1,8 +1,8 @@
 __author__ = 'sunary'
 
+import tensorflow as tf
 
 import input_data
-import tensorflow as tf
 
 
 # Import MINST data

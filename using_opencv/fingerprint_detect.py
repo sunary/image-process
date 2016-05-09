@@ -1,14 +1,12 @@
 __author__ = 'sunary'
 
 
-from utils import helper
 import os
 import cv2
 import numpy as np
-from pre_process.edge_detect import EdgeDetect
-from pre_process import histogram_equalization
-from pre_process.fingerprint_enhance import FingerprintEnhance
-from pre_process.gabor_filter import GaborFilter
+from preprocess import edge_detect
+from preprocess import histogram_equalization
+from preprocess.gabor_filter import GaborFilter
 
 
 class FingerprintDetect():
@@ -17,16 +15,15 @@ class FingerprintDetect():
         pass
 
     def convert_gray(self, img_file):
-        edge_detect = EdgeDetect()
         pix = cv2.imread(os.path.dirname(__file__) + img_file, 0)
 
         pix_none = pix
-        pix_none = edge_detect.process(pix_none)
+        pix_none = edge_detect.edge_detect(pix_none)
         cv2.imshow('pix-none', np.array(pix_none))
 
         # equalize histogram
         pix_equal = cv2.equalizeHist(pix)
-        pix_equal = edge_detect.process(pix_equal)
+        pix_equal = edge_detect.edge_detect(pix_equal)
         cv2.imshow('pix-equal', np.array(pix_equal))
 
         # Contrast Limited Adaptive Histogram Equalization
@@ -37,7 +34,7 @@ class FingerprintDetect():
         pix_threshold = cv2.adaptiveThreshold(np.array(pix_clahe) , 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 4)
         cv2.imshow('pix-threshold', pix_threshold)
 
-        pix_clahe = edge_detect.process(pix_clahe)
+        pix_clahe = edge_detect.edge_detect(pix_clahe)
         cv2.imshow('pix-clahe', np.array(pix_clahe))
 
         cv2.waitKey()

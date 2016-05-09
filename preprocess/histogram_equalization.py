@@ -93,7 +93,6 @@ def preview_combine(img, hist_type=0):
     plt.show()
 
 
-
 if __name__ == '__main__':
     img = cv2.imread('/Users/sunary/Downloads/bs/new_03.jpg', cv2.THRESH_BINARY)
     preview_combine(img, 0)

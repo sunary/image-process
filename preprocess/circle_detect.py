@@ -41,7 +41,6 @@ class CircleDetect():
         pass
 
 
-
 if __name__ == '__main__':
     circle_detect = CircleDetect()
     pix = [[0, 0, 1, 0, 0, 0, 0, 0],

@@ -5,8 +5,8 @@ from utils import helper
 import os
 import cv2
 import numpy as np
-from pre_process.edge_detect import EdgeDetect
-from pre_process.noise_removal import NoiseRemoval
+from preprocess import edge_detect
+from preprocess.noise_removal import NoiseRemoval
 from morphology.morphology import Morphology
 
 
@@ -14,7 +14,6 @@ class IrisDetect():
 
     def __init__(self):
         self.current_dir = os.path.dirname(__file__)
-        self.edge_detect = EdgeDetect()
         self.noise_removal = NoiseRemoval()
         self.morphology = Morphology()
 
@@ -42,7 +41,7 @@ class IrisDetect():
                 for x1, y1, x2, y2 in eyes_rects:
                     eyes_roi = face_roi[y1:y2, x1:x2]
 
-                    edge_eyes_roi = self.edge_detect.process(eyes_roi)
+                    edge_eyes_roi = edge_detect.edge_detect(eyes_roi)
                     helper.save_image(edge_eyes_roi, self.current_dir + '/../resources/eyes_roi%s.png' %(eye_count))
 
                     # edge_eyes_roi = self.noise_removal.median(edge_eyes_roi)
