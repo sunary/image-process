@@ -126,15 +126,16 @@ def run(img_path):
     # cv2.imshow('color selection', img)
 
     img_deskew = make_deskew(img)
-    img_lines = detect_line_hough(img_deskew)
+    # img_lines = detect_line_hough(img_deskew)
     # img_lines = line_detect.houghlines(img)
+    img_boudingbox = edge_detect.bounding_box(img_deskew, range_w=[10, 30], range_h=[20, 60])[0]
 
-    cv2.imshow('lines detection', np.hstack([img, img_lines]))
+    cv2.imshow('lines detection', np.hstack([img_deskew, img_boudingbox]))
 
 
 def run_list(path):
     img_files = [join(path, f) for f in listdir(path) if isfile(join(path, f))]
-    id = 0
+    id = 17
 
     while True:
         run(img_files[id])

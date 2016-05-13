@@ -100,6 +100,22 @@ def _prewitt(self):
             [[-1, -1, -1], [0, 0, 0], [1, 1, 1]])
 
 
+def bounding_box(img, range_w=None, range_h=None):
+    img = histogram_equalization.adaptive_mean(img)
+    cv2.imshow('binary', img)
+
+    contours, hierarchy = cv2.findContours(img, cv2.RETR_LIST, cv2.CHAIN_APPROX_TC89_KCOS)
+    boundings = []
+    for cnt in contours:
+        x, y, w, h = cv2.boundingRect(cnt)
+        if (not range_w or (w >= range_w[0] and w <= range_w[1])) and \
+                (not range_h or (h >= range_h[0] and h <= range_h[1])):
+            boundings.append((x, y, w, h))
+            cv2.rectangle(img, (x, y), (x + w, y + h), (255), 2)
+
+    return img, boundings
+
+
 if __name__ == '__main__':
     pix = helper.read_image('../resources/fp01.jpg')
     pix = helper.convert_gray(pix)

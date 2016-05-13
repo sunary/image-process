@@ -6,6 +6,34 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+def get_border(img):
+    hist = np.histogram(img, np.arange(256))[0]
+
+    # plt.bar(np.arange(255), hist)
+    # plt.show()
+
+    mean_hist = np.mean(hist)
+    top_hist = []
+    for i in np.arange(1, len(hist) - 1):
+        if hist[i] > hist[i - 1] and hist[i] > hist[i + 1]:
+            top_hist.append(i)
+
+    top_hist_value = [hist[i] for i in top_hist]
+    max_hist = top_hist[np.argmax(top_hist_value)]
+    if max_hist >= 127:
+        while max_hist > 1:
+            max_hist -= 1
+            if hist[max_hist] < mean_hist and hist[max_hist] < hist[max_hist - 1] and hist[max_hist] < hist[max_hist + 1]:
+                return max_hist
+    else:
+        while max_hist < len(hist) - 2:
+            max_hist += 1
+            if hist[max_hist] < mean_hist and hist[max_hist] < hist[max_hist - 1] and hist[max_hist] < hist[max_hist + 1]:
+                return max_hist
+
+    return 127
+
+
 def normal(img):
     return cv2.equalizeHist(img)
 
@@ -16,7 +44,8 @@ def clahe(img):
 
 
 def binary(img):
-    _, bin_img = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY)
+    border = get_border(img)
+    _, bin_img = cv2.threshold(img, border, 255, cv2.THRESH_BINARY)
     return bin_img
 
 
@@ -50,7 +79,7 @@ def ostu_algorithm(img, blursize=3):
         if fn < fn_min:
             fn_min = fn
             thresh = i
-    ret, otsu = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    _, otsu = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
     return otsu
 
@@ -94,5 +123,6 @@ def preview_combine(img, hist_type=0):
 
 
 if __name__ == '__main__':
-    img = cv2.imread('/Users/sunary/Downloads/bs/new_03.jpg', cv2.THRESH_BINARY)
-    preview_combine(img, 0)
+    img = cv2.imread('/Users/sunary/Downloads/vzota/TB015-1-10-2015/PA02TB0018876001-KT.jpg', cv2.THRESH_BINARY)
+    preview_bin(img)
+    # preview_combine(img, 0)
