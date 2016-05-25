@@ -8,7 +8,7 @@ from preprocess import deskew, color_processor
 from using_opencv import xor_bit_image
 
 
-def get_plates_flood(img_color, img):
+def get_plates_flood(img_color, img, value=255):
     height, width = img.shape[:2]
     ratio = [0.9, 1.6]
     range_rect_width = (50, 300)
@@ -19,12 +19,12 @@ def get_plates_flood(img_color, img):
 
     for i in range(0, height - 1):
         for j in range(0, width - 1):
-            if img[i][j] == 255:
+            if img[i][j] == value:
                 check_point.append((i, j))
 
     index = [(0, 1), (0, -1), (1, 0), (-1, 0)]
     for y, x in check_point:
-        if img[y][x] == 255:
+        if img[y][x] == value:
             relate_point = [(y, x)]
             set_relate_point = set(relate_point)
             min_x = max_x = x
@@ -39,7 +39,7 @@ def get_plates_flood(img_color, img):
                     new_i = i + idx[0]
                     new_j = j + idx[1]
                     if (new_i > 0 and new_i < height - 1) and (new_j > 0 and new_j < width - 1) and \
-                            img[new_i][new_j] == 255 and (new_i, new_j) not in set_relate_point:
+                            img[new_i][new_j] == value and (new_i, new_j) not in set_relate_point:
                         if new_i > max_y:
                             max_y = new_i
                         elif new_i < min_y:
